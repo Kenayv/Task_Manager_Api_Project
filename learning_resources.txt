@@ -1,0 +1,5 @@
+
+1. Authorization and authentication using JWT tokens
+    Youtube video:
+    Coding Droplets: ASP.Net Core Web API JWT Tutorial [Using JWT in ASP.Net Core]
+    https://www.youtube.com/watch?v=w8I32UPEvj8
