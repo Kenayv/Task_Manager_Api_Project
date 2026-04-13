@@ -9,7 +9,7 @@
 *.db-wal
 
 # secrets
-appsettings.json
+appsettings.*
 
 # dotenv files
 .env
