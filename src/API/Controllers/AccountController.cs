@@ -14,7 +14,7 @@ public class AccountController : ControllerBase
 
     [AllowAnonymous]
     [HttpPost("Login")]
-    public async Task<ActionResult<LoginResponseModel>> login(LoginRequestModel request)
+    public async Task<ActionResult<LoginResponseModel>> Login(LoginRequestModel request)
     {
         var result = await _jwtService.Authenticate(request);
         if (result is null)

@@ -1,5 +1,6 @@
 using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
+using System.Text;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
 
@@ -38,18 +39,30 @@ public class JwtService
         var issuer = _configuration["JwtConfig:Issuer"];
         var audience = _configuration["JwtConfig:Audience"];
         var key = _configuration["JwtConfig:SigningKey"];
-
+        var keyBytes = Encoding.UTF8.GetBytes(key);
+        var securityKey = new SymmetricSecurityKey(keyBytes);
         var tokenValidityMins = _configuration.GetValue<int>("JwtConfig:TokenValidityMins");
 
         var tokenExpiryTimeStamp = DateTime.UtcNow.AddMinutes(tokenValidityMins);
+
+        if (string.IsNullOrEmpty(issuer) || string.IsNullOrEmpty(audience))
+        {
+            throw new Exception("JWT config missing");
+        }
+
         var tokenDescriptor = new SecurityTokenDescriptor
         {
             Subject = new ClaimsIdentity(
-                new[] { new Claim(JwtRegisteredClaimNames.Name, request.UserName) }
+                new[]
+                {
+                    new Claim(ClaimTypes.NameIdentifier, userAccount.Id.ToString()),
+                    new Claim(JwtRegisteredClaimNames.UniqueName, request.UserName),
+                }
             ),
             Expires = tokenExpiryTimeStamp,
             Issuer = issuer,
             Audience = audience,
+            SigningCredentials = new SigningCredentials(securityKey, SecurityAlgorithms.HmacSha256),
         };
 
         var tokenHandler = new JwtSecurityTokenHandler();
