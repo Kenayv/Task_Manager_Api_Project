@@ -1,10 +1,9 @@
-public class TaskItem
+public class TaskDto
 {
     public string Id { get; set; }
     public string Title { get; set; } = string.Empty;
     public string Description { get; set; } = string.Empty;
     public DateTime? Deadline { get; set; }
-    public string OwnerId { get; set; } = string.Empty;
-
-    public ICollection<TaskShare> Shares { get; set; } = new List<TaskShare>();
+    public bool IsOwner { get; set; }
+    public TaskPermission Permission { get; set; }
 }

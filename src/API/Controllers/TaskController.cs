@@ -49,13 +49,28 @@ public class TaskController : ControllerBase
             return Unauthorized();
         }
 
-        var tasks = await _dbContext.Tasks.Where(t => t.OwnerId == userId).ToListAsync();
+        var tasks = await _dbContext
+            .Tasks.Where(t => t.OwnerId == userId || t.Shares.Any(s => s.SharedUserId == userId))
+            .ToListAsync();
 
-        return Ok(tasks);
+        var result = tasks.Select(t => new TaskDto
+        {
+            Id = t.Id,
+            Title = t.Title,
+            Description = t.Description,
+            Deadline = t.Deadline,
+            IsOwner = t.OwnerId == userId,
+            Permission =
+                t.OwnerId == userId
+                    ? TaskPermission.Edit
+                    : t.Shares.First(s => s.SharedUserId == userId).Permission,
+        });
+
+        return Ok(result);
     }
 
     [HttpPut("{id}")]
-    public async Task<ActionResult> UpdateTask(int id, UpdateTaskRequest request)
+    public async Task<ActionResult> UpdateTask(string id, UpdateTaskRequest request)
     {
         var userId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
 
@@ -96,7 +111,7 @@ public class TaskController : ControllerBase
     }
 
     [HttpDelete("{id}")]
-    public async Task<ActionResult> DeleteTask(int id)
+    public async Task<ActionResult> DeleteTask(string id)
     {
         var userId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
 
@@ -120,5 +135,50 @@ public class TaskController : ControllerBase
         await _dbContext.SaveChangesAsync();
 
         return NoContent();
+    }
+
+    [HttpPost("{id}/share")]
+    public async Task<ActionResult> ShareTask(string id, ShareTaskRequest request)
+    {
+        var userId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+
+        if (userId == null)
+        {
+            return Unauthorized();
+        }
+        if (userId == request.SharedUserId)
+        {
+            return BadRequest();
+        }
+
+        var task = await _dbContext
+            .Tasks.Include(t => t.Shares)
+            .FirstOrDefaultAsync(t => t.Id == id);
+
+        if (task == null)
+        {
+            return NotFound();
+        }
+        if (task.OwnerId != userId)
+        {
+            return Forbid();
+        }
+
+        if (task.Shares.Any(s => s.SharedUserId == request.SharedUserId))
+        {
+            return BadRequest("Already shared!");
+        }
+
+        var taskShare = new TaskShare()
+        {
+            TaskId = task.Id,
+            SharedUserId = request.SharedUserId,
+            Permission = request.Permission,
+        };
+
+        _dbContext.TaskShares.Add(taskShare);
+        await _dbContext.SaveChangesAsync();
+
+        return Ok();
     }
 }
