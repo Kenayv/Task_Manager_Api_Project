@@ -18,9 +18,9 @@ public class TaskController : ControllerBase
     [HttpPost]
     public async Task<ActionResult> CreateTask(CreateTaskRequest request)
     {
-        var userIdClaim = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+        var userId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
 
-        if (!int.TryParse(userIdClaim, out var userId))
+        if (userId == null)
         {
             return Unauthorized();
         }
@@ -42,9 +42,9 @@ public class TaskController : ControllerBase
     [HttpGet]
     public async Task<ActionResult> GetUserTasks()
     {
-        var userIdClaim = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+        var userId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
 
-        if (!int.TryParse(userIdClaim, out var userId))
+        if (userId == null)
         {
             return Unauthorized();
         }
@@ -70,16 +70,16 @@ public class TaskController : ControllerBase
     }
 
     [HttpPut("{id}")]
-    public async Task<ActionResult> UpdateTask(int id, UpdateTaskRequest request)
+    public async Task<ActionResult> UpdateTask(string id, UpdateTaskRequest request)
     {
-        var userIdClaim = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+        var userId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
 
-        if (!int.TryParse(userIdClaim, out var userId))
+        if (userId == null)
         {
             return Unauthorized();
         }
 
-        var task = await _dbContext.Tasks.FindAsync(id);
+        var task = await _dbContext.Tasks.FirstOrDefaultAsync(t => t.Id == id);
 
         if (task == null)
         {
@@ -111,16 +111,16 @@ public class TaskController : ControllerBase
     }
 
     [HttpDelete("{id}")]
-    public async Task<ActionResult> DeleteTask(int id)
+    public async Task<ActionResult> DeleteTask(string id)
     {
-        var userIdClaim = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+        var userId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
 
-        if (!int.TryParse(userIdClaim, out var userId))
+        if (userId == null)
         {
             return Unauthorized();
         }
 
-        var task = await _dbContext.Tasks.FindAsync(id);
+        var task = await _dbContext.Tasks.FirstOrDefaultAsync(t => t.Id == id);
 
         if (task == null)
         {
@@ -138,11 +138,11 @@ public class TaskController : ControllerBase
     }
 
     [HttpPost("{id}/share")]
-    public async Task<ActionResult> ShareTask(int id, ShareTaskRequest request)
+    public async Task<ActionResult> ShareTask(string id, ShareTaskRequest request)
     {
-        var userIdClaim = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+        var userId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
 
-        if (!int.TryParse(userIdClaim, out var userId))
+        if (userId == null)
         {
             return Unauthorized();
         }
@@ -151,7 +151,9 @@ public class TaskController : ControllerBase
             return BadRequest();
         }
 
-        var task = await _dbContext.Tasks.Include(t => t.Shares).FirstAsync(t => t.Id == id);
+        var task = await _dbContext
+            .Tasks.Include(t => t.Shares)
+            .FirstOrDefaultAsync(t => t.Id == id);
 
         if (task == null)
         {

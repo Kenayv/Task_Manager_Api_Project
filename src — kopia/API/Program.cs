@@ -67,38 +67,6 @@ builder
 builder.Services.AddAuthorization();
 builder.Services.AddScoped<JwtService>();
 
-//allowing requests from all origins //FIXME: debug only.
-builder.Services.AddCors(options =>
-{
-    options.AddPolicy(
-        "AllowAll",
-        policy =>
-        {
-            policy.AllowAnyOrigin().AllowAnyHeader().AllowAnyMethod();
-        }
-    );
-});
-
-/* Production solution:
-
-builder.Services.AddCors(options =>
-{
-    options.AddPolicy("AllowFrontend",
-        policy =>
-        {
-            policy
-                .WithOrigins(
-                    "http://127.0.0.1:5500",
-                    "http://localhost:5500"
-                )
-                .AllowAnyHeader()
-                .AllowAnyMethod();
-        });
-});
-
-app.UseCors("AllowFrontend");
-
-*/
 var app = builder.Build();
 
 if (app.Environment.IsDevelopment())
@@ -106,8 +74,6 @@ if (app.Environment.IsDevelopment())
     app.UseSwagger();
     app.UseSwaggerUI();
 }
-
-app.UseCors("AllowAll");
 
 app.UseAuthentication();
 app.UseAuthorization();

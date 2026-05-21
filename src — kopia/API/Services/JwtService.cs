@@ -18,7 +18,7 @@ public class JwtService
     public async Task<LoginResponseModel?> Authenticate(LoginRequestModel request)
     {
         if (
-            string.IsNullOrWhiteSpace(request.UserEmail)
+            string.IsNullOrWhiteSpace(request.UserName)
             || string.IsNullOrWhiteSpace(request.Password)
         )
         {
@@ -26,7 +26,7 @@ public class JwtService
         }
 
         var userAccount = await _dbContext.UserAccounts.FirstOrDefaultAsync(x =>
-            x.UserEmail == request.UserEmail
+            x.UserName == request.UserName
         );
         if (
             userAccount == null
@@ -56,7 +56,7 @@ public class JwtService
                 new[]
                 {
                     new Claim(ClaimTypes.NameIdentifier, userAccount.Id.ToString()),
-                    new Claim(JwtRegisteredClaimNames.UniqueName, request.UserEmail),
+                    new Claim(JwtRegisteredClaimNames.UniqueName, request.UserName),
                 }
             ),
             Expires = tokenExpiryTimeStamp,
@@ -72,7 +72,7 @@ public class JwtService
         return new LoginResponseModel
         {
             AccessToken = accessToken,
-            UserName = "test", //FIXME:
+            UserName = request.UserName,
             ExpiresIn = (int)tokenExpiryTimeStamp.Subtract(DateTime.UtcNow).TotalSeconds,
         };
     }

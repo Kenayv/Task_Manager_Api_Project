@@ -1,0 +1,30 @@
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+:root {
+  --bg: #0f0f0f;
+  --surface: #1a1a1a;
+  --surface2: #242424;
+  --border: #2e2e2e;
+  --border-hover: #444;
+  --text: #e8e8e2;
+  --text-muted: #888;
+  --text-dim: #555;
+  --accent: #c8f55a;
+  --accent-dark: #9dc43a;
+  --accent-text: #0f0f0f;
+  --danger: #ff5c5c;
+  --warning: #f5a623;
+  --info: #5caeff;
+  --radius: 8px;
+  --radius-lg: 14px;
+  --mono: 'DM Mono', monospace;
+  --sans: 'DM Sans', sans-serif;
+}
+
+body {
+  font-family: var(--sans);
+  background: var(--bg);
+  color: var(--text);
+  min-height: 100vh;
+  line-height: 1.5;
+}

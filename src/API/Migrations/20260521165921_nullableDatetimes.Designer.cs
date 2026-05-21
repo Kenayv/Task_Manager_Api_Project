@@ -10,8 +10,8 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace API.Migrations
 {
     [DbContext(typeof(AppDbContext))]
-    [Migration("20260427105058_AddTaskSharing")]
-    partial class AddTaskSharing
+    [Migration("20260521165921_nullableDatetimes")]
+    partial class nullableDatetimes
     {
         /// <inheritdoc />
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
@@ -32,9 +32,8 @@ namespace API.Migrations
                         .IsRequired()
                         .HasColumnType("TEXT");
 
-                    b.Property<string>("OwnerId")
-                        .IsRequired()
-                        .HasColumnType("TEXT");
+                    b.Property<int>("OwnerId")
+                        .HasColumnType("INTEGER");
 
                     b.Property<string>("Title")
                         .IsRequired()
@@ -49,21 +48,21 @@ namespace API.Migrations
                         {
                             Id = 6,
                             Description = "",
-                            OwnerId = "1",
+                            OwnerId = 1,
                             Title = "taki tam task"
                         },
                         new
                         {
                             Id = 4,
                             Description = "",
-                            OwnerId = "1",
+                            OwnerId = 1,
                             Title = "yet another task for user1"
                         },
                         new
                         {
                             Id = 1,
                             Description = "",
-                            OwnerId = "2",
+                            OwnerId = 2,
                             Title = "A taks that IS INVISIBLE for user1"
                         });
                 });
@@ -77,17 +76,18 @@ namespace API.Migrations
                     b.Property<int>("Permission")
                         .HasColumnType("INTEGER");
 
-                    b.Property<string>("SharedUserId")
-                        .IsRequired()
-                        .HasColumnType("TEXT");
+                    b.Property<int>("SharedUserId")
+                        .HasColumnType("INTEGER");
 
                     b.Property<int>("TaskId")
                         .HasColumnType("INTEGER");
 
+                    b.Property<int?>("TaskItemId")
+                        .HasColumnType("INTEGER");
+
                     b.HasKey("Id");
 
-                    b.HasIndex("TaskId", "SharedUserId")
-                        .IsUnique();
+                    b.HasIndex("TaskItemId");
 
                     b.ToTable("TaskShares");
                 });
@@ -99,6 +99,9 @@ namespace API.Migrations
                         .HasColumnType("INTEGER");
 
                     b.Property<string>("Password")
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("UserEmail")
                         .HasColumnType("TEXT");
 
                     b.Property<string>("UserName")
@@ -113,19 +116,16 @@ namespace API.Migrations
                         {
                             Id = 1,
                             Password = "admin123",
+                            UserEmail = "admin@debug.com",
                             UserName = "admin"
                         });
                 });
 
             modelBuilder.Entity("TaskShare", b =>
                 {
-                    b.HasOne("TaskItem", "Task")
+                    b.HasOne("TaskItem", null)
                         .WithMany("Shares")
-                        .HasForeignKey("TaskId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.Navigation("Task");
+                        .HasForeignKey("TaskItemId");
                 });
 
             modelBuilder.Entity("TaskItem", b =>

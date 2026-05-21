@@ -1,5 +1,5 @@
 public class UserDTO
 {
-    public int userId { get; set; }
+    public string? userId { get; set; }
     public string? userName { get; set; }
 }

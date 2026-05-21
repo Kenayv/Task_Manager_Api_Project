@@ -12,6 +12,18 @@ public class AppDbContext : DbContext
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
         base.OnModelCreating(modelBuilder);
+
+        modelBuilder
+            .Entity<TaskShare>()
+            .HasOne(ts => ts.Task)
+            .WithMany(t => t.Shares)
+            .HasForeignKey(ts => ts.TaskId);
+
+        modelBuilder
+            .Entity<TaskShare>()
+            .HasIndex(ts => new { ts.TaskId, ts.SharedUserId })
+            .IsUnique();
+
         _ = modelBuilder
             .Entity<UserAccount>()
             .HasData([
@@ -19,8 +31,7 @@ public class AppDbContext : DbContext
                 {
                     Id = 1,
                     UserName = "admin",
-                    UserEmail = "admin@debug.com",
-                    Password = "admin123",
+                    Password = PasswordHashHandler.HashPassword("admin123"),
                 },
             ]);
         _ = modelBuilder
@@ -30,19 +41,19 @@ public class AppDbContext : DbContext
                 {
                     Id = 6,
                     Title = "taki tam task",
-                    OwnerId = 1,
+                    OwnerId = "1",
                 },
                 new TaskItem
                 {
                     Id = 4,
                     Title = "yet another task for user1",
-                    OwnerId = 1,
+                    OwnerId = "1",
                 },
                 new TaskItem
                 {
                     Id = 1,
                     Title = "A taks that IS INVISIBLE for user1",
-                    OwnerId = 2,
+                    OwnerId = "2",
                 },
             ]);
     }

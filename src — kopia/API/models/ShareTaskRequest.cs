@@ -1,6 +1,6 @@
 public class ShareTaskRequest
 {
-    public int TaskId { get; set; }
-    public int SharedUserId { get; set; }
+    public string TaskId { get; set; }
+    public string SharedUserId { get; set; }
     public TaskPermission Permission { get; set; }
 }

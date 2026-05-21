@@ -1,0 +1,237 @@
+<!DOCTYPE html>
+<html lang="pl">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>TaskApp</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet" />
+
+  <link rel="stylesheet" href="css/variables.css" />
+  <link rel="stylesheet" href="css/components.css" />
+  <link rel="stylesheet" href="css/auth.css" />
+  <link rel="stylesheet" href="css/layout.css" />
+  <link rel="stylesheet" href="css/tasks.css" />
+  <link rel="stylesheet" href="css/modals.css" />
+</head>
+<body>
+
+<!-- ═══════════════════════════════════════
+     AUTH SCREEN
+═══════════════════════════════════════ -->
+<div id="auth-screen">
+  <div class="auth-box">
+    <div class="auth-logo">task<span>.</span>app</div>
+
+    <div class="tab-row">
+      <button class="tab-btn active" onclick="switchTab('login')">Logowanie</button>
+      <button class="tab-btn" onclick="switchTab('register')">Rejestracja</button>
+    </div>
+
+    <!-- Login form -->
+    <div id="tab-login">
+      <div class="form-group">
+        <label>Email</label>
+        <input type="email" id="login-email" placeholder="user@example.com" />
+      </div>
+      <div class="form-group">
+        <label>Hasło</label>
+        <input type="password" id="login-password" placeholder="••••••••" />
+      </div>
+      <button class="btn btn-primary btn-full" onclick="doLogin()" id="login-btn">
+        Zaloguj się
+      </button>
+      <div class="error-msg" id="login-error"></div>
+    </div>
+
+    <!-- Register form -->
+    <div id="tab-register" style="display:none">
+      <div class="form-group">
+        <label>Nazwa użytkownika</label>
+        <input type="text" id="reg-username" placeholder="jan_kowalski" />
+      </div>
+      <div class="form-group">
+        <label>Email</label>
+        <input type="email" id="reg-email" placeholder="user@example.com" />
+      </div>
+      <div class="form-group">
+        <label>Hasło</label>
+        <input type="password" id="reg-password" placeholder="min. 6 znaków" />
+      </div>
+      <button class="btn btn-primary btn-full" onclick="doRegister()" id="reg-btn">
+        Zarejestruj się
+      </button>
+      <div class="error-msg" id="reg-error"></div>
+    </div>
+
+    <!-- API URL config -->
+    <div style="margin-top: 1.5rem; border-top: 1px solid var(--border); padding-top: 1rem;">
+      <div class="api-banner">
+        <span>API:</span>
+        <input class="api-url-input" type="text" id="api-base-input"
+          value="http://localhost:5279"
+          onchange="setApiBase(this.value)"
+          title="URL backendu ASP.NET Core" />
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════════
+     APP SCREEN
+═══════════════════════════════════════ -->
+<div id="app-screen">
+
+  <!-- Topbar -->
+  <div class="topbar">
+    <div class="topbar-logo">task<span>.</span>app</div>
+    <div class="topbar-right">
+      <span class="user-chip" id="user-display">@user</span>
+      <button class="btn btn-ghost" onclick="doLogout()">Wyloguj</button>
+    </div>
+  </div>
+
+  <div class="main-layout">
+
+    <!-- Sidebar -->
+    <div class="sidebar">
+      <div class="sidebar-label">Widok</div>
+      <button class="sidebar-btn active" id="nav-my" onclick="setView('my')">
+        <span class="sidebar-icon">◈</span> Moje zadania
+      </button>
+      <button class="sidebar-btn" id="nav-shared" onclick="setView('shared')">
+        <span class="sidebar-icon">◫</span> Udostępnione
+      </button>
+      <div class="sidebar-label" style="margin-top:0.75rem">Status</div>
+      <button class="sidebar-btn active" id="filter-all" onclick="setFilter('all')">
+        Wszystkie
+      </button>
+      <button class="sidebar-btn" id="filter-todo" onclick="setFilter('todo')">
+        <span style="color:var(--text-dim)">●</span> Do zrobienia
+      </button>
+      <button class="sidebar-btn" id="filter-inprogress" onclick="setFilter('inprogress')">
+        <span style="color:var(--warning)">●</span> W trakcie
+      </button>
+      <button class="sidebar-btn" id="filter-done" onclick="setFilter('done')">
+        <span style="color:var(--accent)">●</span> Gotowe
+      </button>
+    </div>
+
+    <!-- Content -->
+    <div class="content">
+
+      <!-- API URL config (w widoku aplikacji) -->
+      <div class="api-banner" style="margin-bottom:1.25rem">
+        <span>API:</span>
+        <input class="api-url-input" type="text" id="api-base-input2"
+          onchange="setApiBase(this.value)"
+          title="URL backendu ASP.NET Core" />
+      </div>
+
+      <div class="content-header">
+        <div class="content-title" id="view-title">Moje zadania</div>
+        <button class="btn btn-primary" onclick="openCreateModal()">
+          + Nowe zadanie
+        </button>
+      </div>
+
+      <div id="task-list" class="tasks-grid">
+        <div class="loading-row"><div class="spinner"></div> Ładowanie...</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════════
+     MODALS
+═══════════════════════════════════════ -->
+
+<!-- Create/Edit Task -->
+<div class="modal-backdrop" id="task-modal">
+  <div class="modal">
+    <div class="modal-header">
+      <div class="modal-title" id="task-modal-title">Nowe zadanie</div>
+      <button class="icon-btn" onclick="closeModal('task-modal')">✕</button>
+    </div>
+    <input type="hidden" id="edit-task-id" />
+    <div class="form-group">
+      <label>Tytuł</label>
+      <input type="text" id="task-title-input" placeholder="Nazwa zadania..." />
+    </div>
+    <div class="form-group">
+      <label>Opis</label>
+      <textarea id="task-desc-input" placeholder="Opcjonalny opis..."></textarea>
+    </div>
+    <div class="form-group">
+      <label>Status</label>
+      <select id="task-status-input">
+        <option value="todo">Do zrobienia</option>
+        <option value="inprogress">W trakcie</option>
+        <option value="done">Gotowe</option>
+      </select>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-ghost" onclick="closeModal('task-modal')">Anuluj</button>
+      <button class="btn btn-primary" onclick="saveTask()" id="save-task-btn">Zapisz</button>
+    </div>
+    <div class="error-msg" id="task-error"></div>
+  </div>
+</div>
+
+<!-- Share Task -->
+<div class="modal-backdrop" id="share-modal">
+  <div class="modal">
+    <div class="modal-header">
+      <div class="modal-title">Udostępnij zadanie</div>
+      <button class="icon-btn" onclick="closeModal('share-modal')">✕</button>
+    </div>
+    <input type="hidden" id="share-task-id" />
+    <div class="form-group">
+      <label>Email lub nazwa użytkownika</label>
+      <input type="text" id="share-user-input" placeholder="jan_kowalski" />
+    </div>
+    <div class="form-group">
+      <label>Uprawnienia</label>
+      <select id="share-permission-input">
+        <option value="read">Tylko odczyt</option>
+        <option value="edit">Edycja</option>
+      </select>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-ghost" onclick="closeModal('share-modal')">Anuluj</button>
+      <button class="btn btn-primary" onclick="shareTask()">Udostępnij</button>
+    </div>
+    <div class="error-msg" id="share-error"></div>
+  </div>
+</div>
+
+<!-- Delete Confirm -->
+<div class="modal-backdrop" id="delete-modal">
+  <div class="modal">
+    <div class="modal-header">
+      <div class="modal-title">Usuń zadanie</div>
+      <button class="icon-btn" onclick="closeModal('delete-modal')">✕</button>
+    </div>
+    <p style="font-size:0.875rem; color:var(--text-muted); margin-bottom:0.5rem">
+      Czy na pewno chcesz usunąć to zadanie? Tej operacji nie można cofnąć.
+    </p>
+    <input type="hidden" id="delete-task-id" />
+    <div class="modal-footer">
+      <button class="btn btn-ghost" onclick="closeModal('delete-modal')">Anuluj</button>
+      <button class="btn btn-danger" onclick="deleteTask()">Usuń</button>
+    </div>
+  </div>
+</div>
+
+<!-- Toast container -->
+<div class="toast-container" id="toasts"></div>
+
+<!-- Scripts — kolejność ma znaczenie -->
+<script src="js/api.js"></script>
+<script src="js/ui.js"></script>
+<script src="js/auth.js"></script>
+<script src="js/tasks.js"></script>
+<script src="js/init.js"></script>
+
+</body>
+</html>
